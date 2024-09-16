@@ -30,7 +30,29 @@ const client = new Client({
     ]
 })
 
-/** client is our bot instance, so we can call our client */
+/** client.on is a method with access to a list of events */
+/** Listens when bot is ready, write a callback function, c is for client */
+client.on('ready', (c) => {
+    console.log(`${c.user.tag} is now running...`);
+})
+
+/** 
+ * Triggered when new message is sent that is visible to bot
+ *  This is why we need the correct intents! GuildMessages and MessageContent
+ */
+client.on('messageCreate', (message) => {
+    /** Prevents bot from infinitely replying to itself */
+    if (message.author.bot) {
+        return
+    }
+
+    console.log(`${message.author.username}: ${message.content}`);
+
+    /** === is faster than ==, not type conversion */
+    if (message.content.includes('hello')) {
+        message.reply(`Hello ${message.author.username}!`);
+    }
+})
+
+/** client is our bot instance, so we can call our client, bot should be online now */
 client.login(process.env.DISCORD_API_KEY);
-
-
