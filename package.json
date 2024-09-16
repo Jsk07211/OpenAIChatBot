@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "discord.js": "^14.16.2",
+    "dotenv": "^16.4.5",
+    "openai": "^4.61.0"
+  },
+  "name": "openaichatbot",
+  "version": "1.0.0",
+  "description": "A discord bot that uses the OpenAI API to answer user questions and (hopefully) do trivia night!",
+  "main": "src/index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
