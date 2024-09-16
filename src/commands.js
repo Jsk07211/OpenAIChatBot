@@ -1,12 +1,17 @@
 require('dotenv').config();
-const { REST, Routes } = require('discord.js');
+const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 
 /** Define commands */
 const commands = [
-    {
-        name: 'hello',
-        description: 'Replies with hello!',
-    },
+    new SlashCommandBuilder()
+        .setName('hello')
+        .setDescription('Replies with hello!'),
+    new SlashCommandBuilder()
+        .setName('embed')
+        .setDescription('Returns an embed')
+        .addStringOption(option => option.setName('text')
+                                         .setDescription('Body Text')
+                                         .setRequired(true)),
 ];
 
 /** Register commands */

@@ -5,7 +5,7 @@ require('dotenv').config();
 
 /** Unpack  values from array/object into separate values */
 /** Client refers to our bot */
-const { Client, IntentsBitField } = require('discord.js');
+const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
 
 /** Takes in the intents object, everything else is optional */
 /** Intents are a set of permissions the bot can use to get access to a set of events */
@@ -48,9 +48,39 @@ client.on('messageCreate', (message) => {
 
     console.log(`${message.author.username}: ${message.content}`);
 
-    /** === is faster than ==, not type conversion */
     if (message.content.includes('hello')) {
         message.reply(`Hello ${message.author.username}!`);
+    }
+})
+
+/** Handle slash commands */
+client.on('interactionCreate', (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+    console.log(interaction);
+    /** Only run if input was a slash command */
+    /** === is faster than ==, not type conversion */
+    if (interaction.commandName === 'hello') {
+        interaction.reply(`Hello ${interaction.user.username}!`);
+    }
+
+    if (interaction.commandName === 'embed') {
+        /** Chain methods to define shape of embed */
+        const text = interaction.options.get('text').value;
+
+        const embed = new EmbedBuilder().setTitle(`${interaction.user.username}`)
+                                        .setDescription(`${text}`)
+                                        .setColor('Random');
+        interaction.reply({ embeds: [embed] })
+    }
+})
+
+/** Listen to messages instead */
+client.on('messageCreate', (message) => {
+    if (message.content === 'embed') {
+        const embed = new EmbedBuilder().setTitle(`${message.author.username}`)
+                                        .setDescription('This is an embed!')
+                                        .setColor('Random');
+        message.reply({ embeds: [embed] });
     }
 })
 
