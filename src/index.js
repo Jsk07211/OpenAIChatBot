@@ -1,11 +1,15 @@
+import OpenAI from 'openai';
+import dotenv from 'dotenv';
+import { Client, IntentsBitField, EmbedBuilder } from 'discord.js';
+
 /** Initialize dotenv so we can access environment variables */
-require('dotenv').config();
+dotenv.config();
 
 /** Imports from discord.js library */
 
 /** Unpack  values from array/object into separate values */
 /** Client refers to our bot */
-const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
+// const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
 
 /** Takes in the intents object, everything else is optional */
 /** Intents are a set of permissions the bot can use to get access to a set of events */
@@ -17,7 +21,7 @@ const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
  * We set bitflags to express our intents
  * 
  * Guilds: Server info (Can remove later)
- * GuildMemebers: Server member info (Can remove later)
+ * GuildMembers: Server member info (Can remove later)
  * GuildMessages: Server message info (required for chatbot!!)
  * MessageContent: Read permission for server messages (also required!)
  */
@@ -29,6 +33,10 @@ const client = new Client({
         IntentsBitField.Flags.MessageContent,
     ]
 })
+
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
 
 /** client.on is a method with access to a list of events */
 /** Listens when bot is ready, write a callback function, c is for client */
@@ -53,34 +61,70 @@ client.on('messageCreate', (message) => {
     }
 })
 
+async function generateMessage(textPrompt) {
+    const response = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+            {
+                role: 'system',
+                content: 'You are a college student answering your classmate.',
+            },
+            {
+                role: 'user',
+                content: textPrompt,
+            },
+        ],
+    });
+    return response.choices[0].message;
+}
+
+async function generateImage(imagePrompt) {
+    const response = await openai.images.generate({
+        model: 'dall-e-3',
+        prompt: imagePrompt,
+        size: "1024x1024",
+        quality: "standard",
+        n: 1,
+    })
+    console.log(response);
+    return response.data[0].url;
+}
+
 /** Handle slash commands */
-client.on('interactionCreate', (interaction) => {
+client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
-    console.log(interaction);
-    /** Only run if input was a slash command */
-    /** === is faster than ==, not type conversion */
-    if (interaction.commandName === 'hello') {
-        interaction.reply(`Hello ${interaction.user.username}!`);
-    }
+    if (interaction.channel.id !== process.env.CHANNEL_ID) return;
 
     if (interaction.commandName === 'embed') {
-        /** Chain methods to define shape of embed */
-        const text = interaction.options.get('text').value;
+        await interaction.deferReply();
+        try {
+            const prompt = interaction.options.get('text').value;
+            const image = await generateImage(prompt);
+            /** Chain methods to define shape of embed */
+            const text = interaction.options.get('text').value;
+            const embed = new EmbedBuilder().setTitle(`${interaction.user.username}`)
+                                            .setDescription(`${prompt}`)
+                                            .setImage(image)
+                                            .setColor('Random');
+            await interaction.editReply({ embeds: [embed] });
+        } catch (e) {
+            console.log("Error occurred: ", e);
+            return await interaction.editReply('I\'m fresh out of images...');
+        }
+    }    
 
-        const embed = new EmbedBuilder().setTitle(`${interaction.user.username}`)
-                                        .setDescription(`${text}`)
-                                        .setColor('Random');
-        interaction.reply({ embeds: [embed] })
-    }
-})
+    if (interaction.commandName === 'ama') {
+        /** Send typing status */
+        await interaction.deferReply();
+        const prompt = interaction.options.get('text').value;
 
-/** Listen to messages instead */
-client.on('messageCreate', (message) => {
-    if (message.content === 'embed') {
-        const embed = new EmbedBuilder().setTitle(`${message.author.username}`)
-                                        .setDescription('This is an embed!')
-                                        .setColor('Random');
-        message.reply({ embeds: [embed] });
+        try {
+            const response = await generateMessage(prompt);
+            await interaction.editReply(response);
+        } catch (e) {
+            console.log("Error occurred: ", e);
+            return await interaction.editReply('You\'ve stumped me D:');
+        }
     }
 })
 

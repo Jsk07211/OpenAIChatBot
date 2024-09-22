@@ -12,6 +12,12 @@ const commands = [
         .addStringOption(option => option.setName('text')
                                          .setDescription('Body Text')
                                          .setRequired(true)),
+    new SlashCommandBuilder()
+        .setName('ama')
+        .setDescription('Ask me anything :)')
+        .addStringOption(option => option.setName('text')
+                                         .setDescription('Body Text')
+                                         .setRequired(true)),
 ];
 
 /** Register commands */
